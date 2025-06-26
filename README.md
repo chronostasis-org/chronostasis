@@ -13,4 +13,5 @@ docker system prune -a --volumes
 
 ## To-Do
 - enable docker's [file watch](https://docs.docker.com/compose/how-tos/file-watch/)
+- add production and development states to Dockerfile
 
