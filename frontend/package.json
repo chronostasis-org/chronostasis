@@ -33,6 +33,7 @@
     "eslint-config-next": "15.3.4",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.6.13",
+    "react-dropdown-menu": "^0.0.2",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.4",
     "typescript": "^5"
