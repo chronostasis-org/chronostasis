@@ -8,7 +8,7 @@
     "css": "src/app/globals.css",
     "baseColor": "stone",
     "cssVariables": true,
-    "prefix": "tw-"
+    "prefix": ""
   },
   "aliases": {
     "components": "@/components",
