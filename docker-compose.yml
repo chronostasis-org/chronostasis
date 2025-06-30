@@ -9,11 +9,34 @@ services:
     volumes:
       - ./frontend:/app
   backend:
+    container_name: axum-backend
     build:
       context: ./backend
       dockerfile: Dockerfile
     volumes:
       - ./backend:/usr/src/backend
-    container_name: axum-backend
     ports:
       - "8000:8000"
+  db:
+    container_name: server_db_container
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: chronostasis_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "PGPASSWORD=password pg_isready -U postgres -d chronostasis_db",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  db_data:
+    driver: local
