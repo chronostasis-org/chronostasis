@@ -5,6 +5,9 @@ use axum::{
 
 #[tokio::main]
 async fn main() {
+    // Connect to DB
+    let db: DatabaseConnection = Database::connect("postgres://username:password@host/database?currentSchema=my_schema").await?;
+
     // build our application with a single route
     let app = Router::new().route("/", get(|| async { "Hello, World!" }));
 
