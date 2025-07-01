@@ -1,17 +1,20 @@
-use axum::{
-    routing::get,
-    Router,
-};
+use axum::{http::StatusCode, response::IntoResponse, routing::get, Router};
 
 #[tokio::main]
 async fn main() {
-    // Connect to DB
-    let db: DatabaseConnection = Database::connect("postgres://username:password@host/database?currentSchema=my_schema").await?;
+    server().await;
+}
 
-    // build our application with a single route
-    let app = Router::new().route("/", get(|| async { "Hello, World!" }));
+async fn server() {
+    let app: Router = Router::new()
+        .route("/api/test", get(test));
 
-    // run our app with hyper, listening globally on port 8000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("localhost:8080").await.unwrap();
     axum::serve(listener, app).await.unwrap();
+}
+
+async fn test() -> impl IntoResponse {
+    println!("Test Api");
+
+    (StatusCode::ACCEPTED, "Works!")
 }

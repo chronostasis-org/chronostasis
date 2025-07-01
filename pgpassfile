@@ -1,0 +1,1 @@
+chronostasis_db:5432:*:postgres:password
