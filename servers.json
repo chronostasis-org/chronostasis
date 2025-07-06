@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Chronostasis DB",
+      "Group": "Servers",
+      "Port": 5432,
+      "Username": "postgres",
+      "Host": "db",
+      "SSLMode": "prefer",
+      "MaintenanceDB": "postgres",
+      "PassFile": "/pgpassfile"
+    }
+  }
+}
