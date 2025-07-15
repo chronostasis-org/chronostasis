@@ -13,6 +13,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { InventoryGrid } from "@/components/inventory/inventory-grid";
+import { mockInventoryItems } from "@/data/mockInventory";
 
 export default function Page() {
   return (
@@ -47,7 +49,9 @@ export default function Page() {
             <div className="bg-muted/50 aspect-video rounded-xl" />
             <div className="bg-muted/50 aspect-video rounded-xl" />
           </div>
-          <div className="bg-mute/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
+          <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min">
+            <InventoryGrid items={mockInventoryItems} />
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
