@@ -11,6 +11,7 @@ services:
       - "3000:3000"
     volumes:
       - ./frontend:/app
+
   backend:
     container_name: axum-backend
     build:
@@ -22,6 +23,10 @@ services:
       - "8000:8000"
     networks:
       - db_network
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     container_name: server_db_container
     image: postgres:latest
@@ -45,6 +50,7 @@ services:
       start_period: 10s
     networks:
       - db_network
+
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4:8
