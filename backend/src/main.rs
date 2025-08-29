@@ -9,24 +9,29 @@ use std::env;
 use tower_http::services::ServeFile;
 use tower_http::set_header::SetResponseHeaderLayer;
 
+pub mod logging;
+
 #[tokio::main]
 async fn main() {
+  // Initialize logging
+  logging::init_logger();
   // Load .env
-  println!("dotenv loaded");
+  log::info!("dotenv loaded");
   dotenvy::dotenv().ok();
 
   // Parse config and init DB
-  println!("Initializing configuration");
+  log::info!("Initializing configuration");
   let cfg = Configuration::new();
 
-  println!("Initializing db connection");
+  // Initialize db connection.
+  log::info!("Initializing db connection");
   let db = Db::new(&cfg).await.expect("Failed to initialize db");
 
   if cfg.db_run_migrations {
-    println!("Running migrations");
+    log::info!("Running migrations");
     db.run_migrations().await.expect("Failed to run migrations");
   } else {
-    println!("Skipping migrations as DATABASE_RUN_MIGRATIONS is disabled");
+    log::info!("Skipping migrations as DATABASE_RUN_MIGRATIONS is disabled");
   }
 
   // Cache-Control based APP_ENV state
