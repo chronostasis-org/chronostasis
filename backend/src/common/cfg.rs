@@ -1,8 +1,5 @@
 use serde::Deserialize;
-use std::{
-  str::FromStr,
-  sync::Arc,
-};
+use std::{str::FromStr, sync::Arc};
 
 pub type Config = Arc<Configuration>;
 
@@ -77,7 +74,7 @@ impl Configuration {
     });
 
     // Log the current configuration
-    println!("Application configuration loaded");
+    log::info!("Application configuration loaded");
 
     config
   }
