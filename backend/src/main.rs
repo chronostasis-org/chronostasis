@@ -1,15 +1,17 @@
 use axum::{
   http::{header, HeaderValue},
   routing::get_service,
-  Router,
 };
 use server::common::cfg::Configuration;
 use server::database::Db;
+use server::routes::app_router;
+use tokio::net::TcpListener;
+use std::sync::Arc;
 use std::env;
 use tower_http::services::ServeFile;
 use tower_http::set_header::SetResponseHeaderLayer;
 
-pub mod logging;
+mod logging;
 
 #[tokio::main]
 async fn main() {
@@ -26,6 +28,7 @@ async fn main() {
   // Initialize db connection.
   log::info!("Initializing db connection");
   let db = Db::new(&cfg).await.expect("Failed to initialize db");
+  let db = Arc::new(db);
 
   if cfg.db_run_migrations {
     log::info!("Running migrations");
@@ -43,18 +46,21 @@ async fn main() {
 
   // File service for PNG spritesheet
   let file_service = get_service(ServeFile::new("static/assets/spritesheet.png"))
-    // Add/override Cache-Control
-    .layer(SetResponseHeaderLayer::overriding(
-      header::CACHE_CONTROL,
-      HeaderValue::from_static(cache_control_val),
-    ));
+      // Add/override Cache-Control
+      .layer(SetResponseHeaderLayer::overriding(
+        header::CACHE_CONTROL,
+        HeaderValue::from_static(cache_control_val),
+      ));
 
-  let app = Router::new()
-    // Serve the spritesheet at /spritesheet
-    .route_service("/spritesheet", file_service);
+  // Set up the main app router from routes::app_router (all app routes)
+  let app = app_router(db.clone())
+      // Mount the /spritesheet route for the spritesheet file
+      .route_service("/spritesheet", file_service);
 
-  let addr = "0.0.0.0:8000";
-  println!("listening on http://{addr}");
-  let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-  axum::serve(listener, app).await.unwrap();
+  // Start Axum server using recommended axum::serve API
+  println!("Starting Axum server on 0.0.0.0:8000");
+  let listener = TcpListener::bind("0.0.0.0:8000").await.unwrap();
+  axum::serve(listener, app.into_make_service())
+      .await
+      .unwrap();
 }
