@@ -1,6 +1,6 @@
 use sea_orm::{ActiveEnum, DbBackend, Schema, Statement};
 use sea_orm_migration::prelude::*;
-use seaography::itertools::Itertools;
+
 use crate::modules::users::enums::{UserRole, UserStatus};
 
 #[derive(DeriveMigrationName)]
@@ -64,8 +64,8 @@ impl MigrationTrait for Migration {
           .table(Users::Table)
           .if_not_exists()
           .col(ColumnDef::new(Users::Id).uuid().not_null().primary_key())
-          .col(ColumnDef::new(Users::Slug).string().not_null().unique())
-          .col(ColumnDef::new(Users::Email).string().not_null()).unique()
+          .col(ColumnDef::new(Users::Slug).string().not_null().unique_key())
+          .col(ColumnDef::new(Users::Email).string().not_null().unique_key())
           .col(ColumnDef::new(Users::Password).string().not_null())
           .col(ColumnDef::new(Users::Name).string().not_null())
           .col(
