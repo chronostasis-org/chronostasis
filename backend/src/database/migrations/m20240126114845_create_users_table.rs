@@ -1,7 +1,7 @@
+use crate::modules::users::enums::{UserRole, UserStatus};
 use sea_orm::{ActiveEnum, DbBackend, Schema, Statement};
 use sea_orm_migration::prelude::*;
 
-use crate::modules::users::enums::{UserRole, UserStatus};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -65,7 +65,12 @@ impl MigrationTrait for Migration {
           .if_not_exists()
           .col(ColumnDef::new(Users::Id).uuid().not_null().primary_key())
           .col(ColumnDef::new(Users::Slug).string().not_null().unique_key())
-          .col(ColumnDef::new(Users::Email).string().not_null().unique_key())
+          .col(
+            ColumnDef::new(Users::Email)
+              .string()
+              .not_null()
+              .unique_key(),
+          )
           .col(ColumnDef::new(Users::Password).string().not_null())
           .col(ColumnDef::new(Users::Name).string().not_null())
           .col(

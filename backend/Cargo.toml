@@ -17,12 +17,10 @@ axum-extra = "0.10.1"
 hyper = "1.4.1"
 tower = { version = "0.5.0", features = [] }
 tower-http = { version = "0.6.6", features = [
-  "trace",
-  "timeout",
-  "request-id",
-  "cors",
-  "normalize-path",
+  "full",
 ] }
+log = "0.4"
+env_logger = "0.11"
 
 sea-orm = { version = "1.1.12", features = [
   "runtime-tokio-rustls",
