@@ -1,15 +1,12 @@
-use axum::{
-  http::{header, HeaderValue},
-  routing::get_service,
-};
+use axum::{http::{header, HeaderValue}, routing::get_service, Router, routing::get};
 use server::common::cfg::Configuration;
 use server::database::Db;
-use server::routes::app_router;
 use tokio::net::TcpListener;
 use std::sync::Arc;
 use std::env;
 use tower_http::services::ServeFile;
 use tower_http::set_header::SetResponseHeaderLayer;
+use server::handlers::get_user_by_slug::get_user_by_slug;
 
 mod logging;
 
@@ -53,9 +50,12 @@ async fn main() {
       ));
 
   // Set up the main app router from routes::app_router (all app routes)
-  let app = app_router(db.clone())
+  let app = Router::new()
+      .route("/test", get("Hello, World!"))
+      .route("/users/{slug}", get(get_user_by_slug))
       // Mount the /spritesheet route for the spritesheet file
-      .route_service("/spritesheet", file_service);
+      .route("/spritesheet", file_service)
+    .with_state(db);
 
   // Start Axum server using recommended axum::serve API
   println!("Starting Axum server on 0.0.0.0:8000");
@@ -64,3 +64,15 @@ async fn main() {
       .await
       .unwrap();
 }
+
+/*use std::sync::Arc;
+use axum::{Router, routing::get};
+use crate::database::Db;
+use crate::modules::users::get_user_by_slug;
+
+pub fn app_router(db: Arc<Db>) -> Router {
+  Router::new()
+      .route("/test", get("Hello, World!"))
+      .route("/users/{slug}", get(get_user_by_slug))
+      .with_state(db)
+}*/
