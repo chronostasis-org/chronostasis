@@ -1,4 +1,4 @@
-use crate::modules::users::enums::{UserRole, UserStatus};
+use crate::models::{UserRole, UserStatus};
 use sea_orm::{ActiveEnum, DbBackend, Schema, Statement};
 use sea_orm_migration::prelude::*;
 

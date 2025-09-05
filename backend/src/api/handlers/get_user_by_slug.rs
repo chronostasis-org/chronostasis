@@ -3,13 +3,13 @@ use axum::extract::{Path, State};
 use axum::Json;
 use axum::response::IntoResponse;
 use crate::database::Db;
-use crate::services::user::get_user_by_slug::get_user_by_slug_service;
+use crate::services::user_service;
 
 pub async fn get_user_by_slug(
-    State(db): State<Arc<Db>>,
+    State(db): State<&Db>,
     Path(slug): Path<String>,
 ) -> impl IntoResponse {
-    match get_user_by_slug_service(db, slug).await {
+    match user_service::get_user_by_slug(db, slug).await {
         Ok(Some(user)) => Json(user).into_response(),
         Ok(None) => (axum::http::StatusCode::NOT_FOUND, "User not found").into_response(),
         Err(e) => {
