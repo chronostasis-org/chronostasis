@@ -20,3 +20,11 @@ Run container
 ```bash
 docker run --rm -it -p 8000:8000 -v "$PWD":/usr/src/backend cs-backend
 ```
+
+## To-Do
+
+Small fixes/features that don't really fit in in an issue
+
+- [ ] Fix asset serving using tower's ServeDir/ServeFile methods
+- [ ] Fix app_router function signature
+- [ ] Add healthcheck api route
