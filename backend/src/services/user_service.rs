@@ -1,4 +1,3 @@
-use crate::database::Db;
 use crate::dto::user_get_dto::UserGetDto;
 use crate::entities::users;
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
@@ -24,8 +23,11 @@ pub async fn get_user_by_slug(
   }
 }
 
-pub async fn get_user_by_id(db: Db, id: Uuid) -> Result<Option<UserGetDto>, sea_orm::DbErr> {
-  match users::Entity::find_by_id(id).one(&db.conn).await {
+pub async fn get_user_by_id(
+  conn: &DatabaseConnection,
+  id: Uuid,
+) -> Result<Option<UserGetDto>, sea_orm::DbErr> {
+  match users::Entity::find_by_id(id).one(conn).await {
     Ok(Some(user)) => Ok(Some(UserGetDto {
       id: user.id.to_string(),
       slug: user.slug,
