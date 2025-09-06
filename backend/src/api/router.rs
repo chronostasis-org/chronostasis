@@ -1,25 +1,23 @@
-use std::env;
-use tower_http::services::ServeFile;
-use crate::database::Db;
+use crate::api::handlers::get_asset::get_spritesheet;
 use crate::api::handlers::get_user_by_slug::get_user_by_slug;
-use axum::{http::{header, HeaderValue}, routing::get_service, Router, routing::get};
-use tower_http::set_header::SetResponseHeaderLayer;
+use crate::common::cfg::Config;
+use crate::database::Db;
 
-pub fn app_router(db: &Db) -> Router {
-    let app_env = env::var("APP_ENV").unwrap_or_else(|_| "development".to_string());
-    let cache_control_val = match app_env.as_str() {
-        "production" => "public, max-age=3600, must-revalidate",
-        _ => "no-store",
-    };
-    let file_service = get_service(ServeFile::new("static/assets/spritesheet.png"))
-        // Add/override Cache-Control
-        .layer(SetResponseHeaderLayer::overriding(
-            header::CACHE_CONTROL,
-            HeaderValue::from_static(cache_control_val),
-        ));
-    Router::new()
-        .route("/test", get("Hello, World!"))
-        .route("/users/{slug}", get(get_user_by_slug))
-        .route_service("/spritesheet", file_service)
-        .with_state(db)
+use axum::{routing::get, Router};
+
+#[derive(Clone)]
+pub struct AppState {
+  pub db: Db,
+  pub cfg: Config,
+}
+
+pub fn app_router(cfg: Config, db: Db) -> Router {
+  let app_state = AppState { db, cfg };
+
+  Router::new()
+    .route("/test", get(|| async { "Hello, World!" }))
+    .route("/users/{slug}", get(get_user_by_slug))
+    .route("/spritesheet", get(get_spritesheet))
+    // .route("/assets/{filename}", get(get_asset))
+    .with_state(app_state)
 }
