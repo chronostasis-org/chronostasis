@@ -1,6 +1,6 @@
-use crate::modules::users::enums::user_status::UserStatus;
+use crate::models::UserStatus;
 use sea_orm::entity::prelude::*;
-use crate::modules::users::enums::UserRole;
+use crate::models::UserRole;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "users")]

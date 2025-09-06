@@ -1,5 +1,7 @@
+pub mod api;
 pub mod common;
 pub mod database;
-pub mod modules;
+pub mod dto;
 pub mod entities;
-pub mod routes;
+pub mod models;
+pub mod services;

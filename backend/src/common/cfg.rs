@@ -22,6 +22,9 @@ pub struct Configuration {
 
   /// Whether to run database migrations on startup
   pub db_run_migrations: bool,
+
+  /// Path to static assets directory (optional)
+  pub static_assets_path: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -64,6 +67,9 @@ impl Configuration {
             .parse::<bool>()
             .expect("Unable to parse the value of the DATABASE_RUN_MIGRATIONS environment variable. Please make sure it is a valid boolean");
 
+    // Get static assets path if specified
+    let static_assets_path = std::env::var("STATIC_ASSETS_PATH").ok();
+
     let config = Arc::new(Configuration {
       env,
       app_port,
@@ -71,6 +77,7 @@ impl Configuration {
       db_pool_max_size,
       db_timeout,
       db_run_migrations,
+      static_assets_path,
     });
 
     // Log the current configuration
