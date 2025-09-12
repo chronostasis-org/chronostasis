@@ -2,7 +2,6 @@ use crate::models::{UserRole, UserStatus};
 use sea_orm::{ActiveEnum, DbBackend, Schema, Statement};
 use sea_orm_migration::prelude::*;
 
-
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
@@ -72,7 +71,12 @@ impl MigrationTrait for Migration {
               .unique_key(),
           )
           .col(ColumnDef::new(Users::Password).string().not_null())
-          .col(ColumnDef::new(Users::Name).string().not_null())
+          .col(
+            ColumnDef::new(Users::Username)
+              .string()
+              .not_null()
+              .unique_key(),
+          )
           .col(
             ColumnDef::new(Users::Status)
               .custom(UserStatus::name())
@@ -166,7 +170,7 @@ enum Users {
   Slug,
   Email,
   Password,
-  Name,
+  Username,
   Status,
   Role,
   CreatedAt,
