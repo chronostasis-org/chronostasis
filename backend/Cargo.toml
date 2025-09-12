@@ -46,6 +46,8 @@ uuid = { version = "1.8.0", features = ["v7", "serde"] }
 dotenvy = "0.15.7"
 
 anyhow = "1.0.98"
+thiserror = "2.0.16"
+tracing = "0.1.41"
 seaography = { version = "~1.1.4", features = [
   "with-decimal",
   "with-chrono",

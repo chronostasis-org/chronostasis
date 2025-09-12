@@ -2743,9 +2743,11 @@ dependencies = [
  "seaography",
  "serde",
  "serde_json",
+ "thiserror 2.0.16",
  "tokio",
  "tower",
  "tower-http",
+ "tracing",
  "uuid",
 ]
 
