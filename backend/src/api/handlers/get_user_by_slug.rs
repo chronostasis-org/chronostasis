@@ -4,20 +4,28 @@ use axum::extract::{Path, State};
 use axum::response::IntoResponse;
 use axum::Json;
 
+// pub async fn get_user_by_slug(
+//   State(state): State<AppState>,
+//   Path(slug): Path<String>,
+// ) -> impl IntoResponse {
+//   match user_service::get_user_by_slug(&state.db.conn, slug).await {
+//     Ok(Some(user)) => Json(user).into_response(),
+//     Ok(None) => (axum::http::StatusCode::NOT_FOUND, "User not found").into_response(),
+//     Err(e) => {
+//       log::error!("Database error: {:?}", e);
+//       (
+//         axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+//         "Database error",
+//       )
+//         .into_response()
+//     }
+//   }
+// }
+
 pub async fn get_user_by_slug(
   State(state): State<AppState>,
-  Path(slug): Path<String>,
-) -> impl IntoResponse {
-  match user_service::get_user_by_slug(&state.db.conn, slug).await {
-    Ok(Some(user)) => Json(user).into_response(),
-    Ok(None) => (axum::http::StatusCode::NOT_FOUND, "User not found").into_response(),
-    Err(e) => {
-      log::error!("Database error: {:?}", e);
-      (
-        axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-        "Database error",
-      )
-        .into_response()
-    }
-  }
+  Path(id): Path<Uuid>,
+) -> Result<Json<UserGetDto>, ApiError> {
+  let dto = user_service::get_user_by_id(&state.db, id).await?;
+  Ok(Json(dto))
 }

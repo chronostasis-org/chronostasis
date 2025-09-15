@@ -1,40 +1,38 @@
+use crate::api::api_error::ApiError;
 use crate::dto::user_get_dto::UserGetDto;
-use crate::entities::users;
+use crate::entities::users::{Column as UserColumn, Entity as UserEntity, Model as UserModel};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use uuid::Uuid;
 
-pub async fn get_user_by_slug(
-  conn: &DatabaseConnection,
-  slug: String,
-) -> Result<Option<UserGetDto>, sea_orm::DbErr> {
-  match users::Entity::find()
-    .filter(users::Column::Slug.eq(slug.clone()))
-    .one(conn)
-    .await
-  {
-    Ok(Some(user)) => Ok(Some(UserGetDto {
+impl From<UserModel> for UserGetDto {
+  fn from(user: UserModel) -> Self {
+    Self {
       id: user.id.to_string(),
       slug: user.slug,
       email: user.email,
       username: user.username,
-    })),
-    Ok(None) => Ok(None),
-    Err(e) => Err(e),
+    }
   }
 }
 
-pub async fn get_user_by_id(
+pub async fn get_user_by_id(conn: &DatabaseConnection, id: Uuid) -> Result<UserGetDto, ApiError> {
+  let user = UserEntity::find_by_id(id)
+    .one(conn)
+    .await?
+    .ok_or_else(|| ApiError::NotFound("User not found".to_string()))?;
+
+  Ok(user.into())
+}
+
+pub async fn get_user_by_slug(
   conn: &DatabaseConnection,
-  id: Uuid,
-) -> Result<Option<UserGetDto>, sea_orm::DbErr> {
-  match users::Entity::find_by_id(id).one(conn).await {
-    Ok(Some(user)) => Ok(Some(UserGetDto {
-      id: user.id.to_string(),
-      slug: user.slug,
-      email: user.email,
-      username: user.username,
-    })),
-    Ok(None) => Ok(None),
-    Err(e) => Err(e),
-  }
+  slug: &str,
+) -> Result<UserGetDto, ApiError> {
+  let user = UserEntity::find()
+    .filter(UserColumn::Slug.eq(slug.to_string()))
+    .one(conn)
+    .await?
+    .ok_or_else(|| ApiError::NotFound("User not found".to_string()))?;
+
+  Ok(user.into())
 }
