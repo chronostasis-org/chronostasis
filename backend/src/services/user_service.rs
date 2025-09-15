@@ -3,8 +3,8 @@ use crate::dto::user_dto::{UserCreateDto, UserGetDto};
 use crate::entities::users::{
   ActiveModel as UserActiveModel, Column as UserColumn, Entity as UserEntity, Model as UserModel,
 };
-use sea_orm::ActiveModelTrait;
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
+use bcrypt::{hash, DEFAULT_COST};
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
 use uuid::Uuid;
 
 impl From<UserModel> for UserGetDto {
@@ -45,15 +45,27 @@ pub async fn create_user(
   req: UserCreateDto,
 ) -> Result<UserGetDto, ApiError> {
   // validate fields
+
   // check uniqueness
-  // hash password
+
+  // Hash password
+  let pepper = std::env::var("PASSWORD_SUFFIX").map_err(|e| {
+    ApiError::InternalError(anyhow::anyhow!(
+      "Failed to read pepper during password hashing: {}",
+      e
+    ))
+  })?;
+  let new_pwd = format!("{}{}", req.password, pepper);
+  let password_hash = hash(new_pwd.as_bytes(), DEFAULT_COST)
+    .map_err(|e| ApiError::InternalError(anyhow::anyhow!("Failed to hash password: {}", e)))?;
+
   // generate slug
 
   let active = UserActiveModel {
     id: Set(Uuid::new_v4()),
     slug: Set(req.username.clone()), // For now, just copy username
     email: Set(req.email),
-    password: Set(req.password),
+    password: Set(password_hash),
     username: Set(req.username),
     ..Default::default()
   };

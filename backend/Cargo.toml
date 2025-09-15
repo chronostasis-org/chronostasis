@@ -54,3 +54,5 @@ seaography = { version = "~1.1.4", features = [
   "with-postgres-array",
   "with-uuid",
 ] }
+
+bcrypt = "0.17.1"
