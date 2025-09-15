@@ -1,5 +1,5 @@
 use crate::api::api_error::ApiError;
-use crate::dto::user_get_dto::UserGetDto;
+use crate::dto::user_dto::UserGetDto;
 use crate::entities::users::{Column as UserColumn, Entity as UserEntity, Model as UserModel};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter};
 use uuid::Uuid;
