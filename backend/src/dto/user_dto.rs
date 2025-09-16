@@ -15,12 +15,18 @@ pub struct UserGetDto {
 #[derive(Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct UserCreateDto {
-  // Username: A–Z, a–z, 0–9, dot; length 3–16; must be ASCII; cannot start with dot
+  // Username rules:
+  // - Allowed: a-z, A-Z, 0-9, hyphen (-)
+  // - Cannot start or end with a hyphen
+  // - No consecutive hyphens
+  // - Max length: 39
+  // - ASCII only
+  // Compatible to Github username rules
   #[validate(custom(function = "validate_ascii"))]
-  #[validate(length(min = 3, max = 16))]
+  #[validate(length(min = 1, max = 39))]
   #[validate(regex(
     path = *USERNAME_RE,
-    message = "username may contain only letters, digits, and dots, and cannot start with a dot"
+    message = "username may contain only letters, digits, and single hyphens between characters; it cannot start/end with a hyphen"
   ))]
   pub username: String,
 
@@ -40,9 +46,10 @@ pub struct UserCreateDto {
 }
 
 // Lazily compiled regexes (compiled once on first use)
-// Username cannot start with a dot; only letters, digits, and dots; length handled by length validator
+// Username: segments of [A-Za-z0-9] separated by single '-' only.
+// This ensures: no leading/trailing '-', no consecutive '-', only allowed chars.
 static USERNAME_RE: LazyLock<Regex> =
-  LazyLock::new(|| Regex::new(r"^(?!\.)[A-Za-z0-9.]{3,16}$").expect("valid USERNAME regex"));
+  LazyLock::new(|| Regex::new(r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$").expect("valid USERNAME regex"));
 
 // Password allows only A-Z, a-z, 0-9, and !@#$%^&*
 static PASSWORD_RE: LazyLock<Regex> =
@@ -66,25 +73,7 @@ fn validate_ascii(value: &str) -> Result<(), ValidationError> {
   }
 }
 
-// Optional helper if you decide to separate slug from username later:
-//
-// pub fn slug_from_username(username: &str) -> String {
-//   // Example slug policy: lowercase, replace '.' with '-', keep only [a-z0-9-], collapse repeats
-//   let mut s = username.to_ascii_lowercase().replace('.', "-");
-//   s.retain(|c| c.is_ascii_alphanumeric() || c == '-');
-//   // Collapse multiple '-' to single
-//   let mut collapsed = String::with_capacity(s.len());
-//   let mut prev_dash = false;
-//   for ch in s.chars() {
-//     if ch == '-' {
-//       if !prev_dash {
-//         collapsed.push('-');
-//         prev_dash = true;
-//       }
-//     } else {
-//       collapsed.push(ch);
-//       prev_dash = false;
-//     }
-//   }
-//   collapsed.trim_matches('-').to_string()
-// }
+/// Slugify username: just lowercase
+pub fn slug_from_username(username: &str) -> String {
+  username.to_ascii_lowercase()
+}
