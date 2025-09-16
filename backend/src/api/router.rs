@@ -1,9 +1,13 @@
+use crate::api::handlers::create_user::create_user;
 use crate::api::handlers::get_asset::get_spritesheet;
 use crate::api::handlers::get_user_by_slug::get_user_by_slug;
 use crate::common::cfg::Config;
 use crate::database::Db;
 
-use axum::{routing::get, Router};
+use axum::{
+  routing::{get, post},
+  Router,
+};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -18,6 +22,7 @@ pub fn app_router(cfg: Config, db: Db) -> Router {
     .route("/test", get(|| async { "Hello, World!" }))
     .route("/users/{slug}", get(get_user_by_slug))
     .route("/spritesheet", get(get_spritesheet))
+    .route("/register", post(create_user))
     // .route("/assets/{filename}", get(get_asset))
     .with_state(app_state)
 }

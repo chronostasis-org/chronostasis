@@ -27,6 +27,7 @@ async fn main() {
   } else {
     log::info!("Skipping migrations as DATABASE_RUN_MIGRATIONS is disabled");
   }
+
   let app = app_router(cfg, db);
 
   // Start Axum server using recommended axum::serve API
