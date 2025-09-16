@@ -28,34 +28,6 @@ async fn main() {
     log::info!("Skipping migrations as DATABASE_RUN_MIGRATIONS is disabled");
   }
 
-  // Create a test user so you can verify things work
-  {
-    use server::dto::user_dto::UserCreateDto;
-    use server::services::user_service;
-
-    let req = UserCreateDto {
-      username: format!("testuser"),
-      email: format!("test@example.com"),
-      password: "password123".to_string(),
-    };
-
-    match user_service::create_user(&db.conn, req).await {
-      Ok(dto) => {
-        log::info!(
-          "Created test user id={} username={} email={} slug={}",
-          dto.id,
-          dto.username,
-          dto.email,
-          dto.slug
-        );
-      }
-      Err(e) => {
-        // Likely due to unique constraints if you restart often; fine for a quick smoke test
-        log::warn!("Failed to create test user: {}", e);
-      }
-    }
-  }
-
   let app = app_router(cfg, db);
 
   // Start Axum server using recommended axum::serve API

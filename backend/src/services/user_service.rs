@@ -44,12 +44,10 @@ pub async fn create_user(
   conn: &DatabaseConnection,
   req: UserCreateDto,
 ) -> Result<UserGetDto, ApiError> {
-  // validate fields
-
   // check uniqueness
 
   // Hash password
-  let pepper = std::env::var("PASSWORD_SUFFIX").map_err(|e| {
+  let pepper = std::env::var("PASSWORD_PEPPER").map_err(|e| {
     ApiError::InternalError(anyhow::anyhow!(
       "Failed to read pepper during password hashing: {}",
       e
@@ -59,7 +57,7 @@ pub async fn create_user(
   let password_hash = hash(new_pwd.as_bytes(), DEFAULT_COST)
     .map_err(|e| ApiError::InternalError(anyhow::anyhow!("Failed to hash password: {}", e)))?;
 
-  // generate slug
+  // generate slug (?)
 
   let active = UserActiveModel {
     id: Set(Uuid::new_v4()),
