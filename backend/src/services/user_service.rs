@@ -1,5 +1,5 @@
 use crate::api::api_error::ApiError;
-use crate::dto::user_dto::{UserCreateDto, UserGetDto};
+use crate::dto::user_dto::{slug_from_username, UserCreateDto, UserGetDto};
 use crate::entities::users::{
   ActiveModel as UserActiveModel, Column as UserColumn, Entity as UserEntity, Model as UserModel,
 };
@@ -44,7 +44,20 @@ pub async fn create_user(
   conn: &DatabaseConnection,
   req: UserCreateDto,
 ) -> Result<UserGetDto, ApiError> {
-  // check uniqueness
+  // Compute slug from username (lowercase only).
+  let slug = slug_from_username(&req.username);
+
+  // Uniqueness check by slug.
+  if UserEntity::find()
+    .filter(UserColumn::Slug.eq(slug.clone()))
+    .one(conn)
+    .await?
+    .is_some()
+  {
+    return Err(ApiError::InvalidRequest(
+      "Username is already taken".to_string(),
+    ));
+  }
 
   // Hash password
   let pepper = std::env::var("PASSWORD_PEPPER").map_err(|e| {
@@ -57,11 +70,10 @@ pub async fn create_user(
   let password_hash = hash(new_pwd.as_bytes(), DEFAULT_COST)
     .map_err(|e| ApiError::InternalError(anyhow::anyhow!("Failed to hash password: {}", e)))?;
 
-  // generate slug (?)
-
+  // Persist user
   let active = UserActiveModel {
     id: Set(Uuid::new_v4()),
-    slug: Set(req.username.clone()), // For now, just copy username
+    slug: Set(slug),
     email: Set(req.email),
     password: Set(password_hash),
     username: Set(req.username),
