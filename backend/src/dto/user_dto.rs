@@ -15,13 +15,12 @@ pub struct UserGetDto {
 #[derive(Debug, Deserialize, Validate)]
 #[serde(deny_unknown_fields)]
 pub struct UserCreateDto {
-  // Username rules:
+  // Username rules (GitHub-like):
   // - Allowed: a-z, A-Z, 0-9, hyphen (-)
   // - Cannot start or end with a hyphen
   // - No consecutive hyphens
-  // - Max length: 39
+  // - Length: 1..=39
   // - ASCII only
-  // Compatible to Github username rules
   #[validate(custom(function = "validate_ascii"))]
   #[validate(length(min = 1, max = 39))]
   #[validate(regex(
@@ -35,7 +34,7 @@ pub struct UserCreateDto {
   #[validate(email)]
   pub email: String,
 
-  // Password: ASCII only; allowed chars: A–Z, a–z, 0–9, !@#$%^&*; length 8–32
+  // Password: ASCII only; allowed: A–Z, a–z, 0–9, !@#$%^&*; length 8–32
   #[validate(custom(function = "validate_ascii"))]
   #[validate(length(min = 8, max = 32))]
   #[validate(regex(
@@ -45,9 +44,8 @@ pub struct UserCreateDto {
   pub password: String,
 }
 
-// Lazily compiled regexes (compiled once on first use)
-// Username: segments of [A-Za-z0-9] separated by single '-' only.
-// This ensures: no leading/trailing '-', no consecutive '-', only allowed chars.
+// Username: segments of [A-Za-z0-9] separated by single '-'.
+// Ensures: no leading/trailing '-', no consecutive '-'.
 static USERNAME_RE: LazyLock<Regex> =
   LazyLock::new(|| Regex::new(r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$").expect("valid USERNAME regex"));
 
@@ -56,8 +54,8 @@ static PASSWORD_RE: LazyLock<Regex> =
   LazyLock::new(|| Regex::new(r"^[A-Za-z0-9!@#$%^&*]{8,32}$").expect("valid PASSWORD regex"));
 
 impl UserCreateDto {
-  /// Safe normalization:
-  /// - Lowercase + trim email for consistent uniqueness checks
+  /// Normalize for consistent uniqueness checks:
+  /// - Trim + lowercase email.
   pub fn normalize(mut self) -> Self {
     self.email = self.email.trim().to_lowercase();
     self
@@ -73,7 +71,7 @@ fn validate_ascii(value: &str) -> Result<(), ValidationError> {
   }
 }
 
-/// Slugify username: just lowercase
+/// Slugify username: just lowercase (your validation guarantees URL-safe chars)
 pub fn slug_from_username(username: &str) -> String {
   username.to_ascii_lowercase()
 }

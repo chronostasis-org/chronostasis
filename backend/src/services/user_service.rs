@@ -47,7 +47,7 @@ pub async fn create_user(
   // Compute slug from username (lowercase only).
   let slug = slug_from_username(&req.username);
 
-  // Uniqueness check by slug.
+  // Lightweight uniqueness check by slug.
   if UserEntity::find()
     .filter(UserColumn::Slug.eq(slug.clone()))
     .one(conn)

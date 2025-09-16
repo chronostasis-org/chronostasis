@@ -1,15 +1,18 @@
-use crate::models::UserRole;
-use crate::models::UserStatus;
+use crate::models::{UserRole, UserStatus};
 use sea_orm::entity::prelude::*;
 
+/// Users entity model
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "users")]
 pub struct Model {
-  #[sea_orm(primary_key)]
+  #[sea_orm(primary_key, auto_increment = false)]
   pub id: Uuid,
+  #[sea_orm(unique)]
   pub slug: String,
+  #[sea_orm(unique)]
   pub email: String,
   pub password: String,
+  #[sea_orm(unique)]
   pub username: String,
   pub status: UserStatus,
   pub role: UserRole,
