@@ -12,12 +12,12 @@ pub struct Model {
   #[sea_orm(unique)]
   pub email: String,
   pub password: String,
-  #[sea_orm(unique)]
   pub username: String,
   pub status: UserStatus,
   pub role: UserRole,
   pub created_at: DateTimeWithTimeZone,
   pub updated_at: DateTimeWithTimeZone,
+  pub deleted_at: Option<DateTimeWithTimeZone>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

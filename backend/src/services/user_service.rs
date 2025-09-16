@@ -46,17 +46,26 @@ pub async fn create_user(
 ) -> Result<UserGetDto, ApiError> {
   // Compute slug from username (lowercase only).
   let slug = slug_from_username(&req.username);
+  let email = req.email.clone();
 
-  // Lightweight uniqueness check by slug.
+  // Uniqueness checks among active (not soft-deleted) users.
   if UserEntity::find()
     .filter(UserColumn::Slug.eq(slug.clone()))
+    .filter(UserColumn::DeletedAt.is_null())
     .one(conn)
     .await?
     .is_some()
   {
-    return Err(ApiError::InvalidRequest(
-      "Username is already taken".to_string(),
-    ));
+    return Err(ApiError::InvalidRequest("Username is already taken".into()));
+  }
+  if UserEntity::find()
+    .filter(UserColumn::Email.eq(email.clone()))
+    .filter(UserColumn::DeletedAt.is_null())
+    .one(conn)
+    .await?
+    .is_some()
+  {
+    return Err(ApiError::InvalidRequest("Email is already in use".into()));
   }
 
   // Hash password
