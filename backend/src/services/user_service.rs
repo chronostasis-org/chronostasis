@@ -61,8 +61,11 @@ pub async fn get_user_by_slug(
 
 pub async fn create_user(
   conn: &DatabaseConnection,
-  req: UserCreateDto,
+  mut req: UserCreateDto,
 ) -> Result<UserGetDto, ApiError> {
+  // Normalize in service to guarantee consistent uniqueness checks
+  req = req.normalize();
+
   // Compute slug from username (lowercase only).
   let slug = slug_from_username(&req.username);
   let email = req.email.clone();
@@ -109,8 +112,11 @@ pub async fn create_user(
 pub async fn update_user(
   conn: &DatabaseConnection,
   id: Uuid,
-  req: UserUpdateDto,
+  mut req: UserUpdateDto,
 ) -> Result<UserGetDto, ApiError> {
+  // Normalize optional fields in service
+  req = req.normalize();
+
   // Load existing user (including soft-deleted, but reject below if deleted)
   let user = UserEntity::find_by_id(id)
     .one(conn)
