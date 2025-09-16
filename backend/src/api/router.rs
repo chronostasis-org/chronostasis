@@ -4,7 +4,10 @@ use crate::api::handlers::get_user_by_slug::get_user_by_slug;
 use crate::common::cfg::Config;
 use crate::database::Db;
 
-use axum::{routing::get, routing::post, Router};
+use axum::{
+  routing::{get, post},
+  Router,
+};
 
 #[derive(Clone)]
 pub struct AppState {

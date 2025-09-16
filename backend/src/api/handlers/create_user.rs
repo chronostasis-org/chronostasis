@@ -6,15 +6,11 @@ use crate::api::router::AppState;
 use crate::dto::user_dto::{UserCreateDto, UserGetDto};
 use crate::services::user_service;
 
-/// POST /users
-/// Body: UserCreateDto
 pub async fn create_user(
   State(state): State<AppState>,
   Json(payload): Json<UserCreateDto>,
 ) -> Result<Json<UserGetDto>, ApiError> {
-  payload
-    .validate()
-    .map_err(|e| ApiError::InvalidRequest(format!("Validation error: {e}")))?;
+  payload.validate()?; // Uses From<ValidationErrors> for ApiError
 
   let payload = payload.normalize();
 

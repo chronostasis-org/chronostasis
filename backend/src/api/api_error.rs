@@ -8,6 +8,7 @@ use sea_orm::DbErr;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::error;
+use validator::ValidationErrors;
 
 /// Custom error type for the API.
 /// The `#[from]` attribute allows for easy conversion from other error types.
@@ -33,6 +34,10 @@ pub enum ApiError {
   #[error("Unauthorized: {0}")]
   Unauthorized(String),
 
+  /// Field validation errors (422)
+  #[error("Validation failed")]
+  Validation(ValidationErrors),
+
   /// Converts from `sea_orm::DbErr`.
   #[error("A database error has occurred.")]
   DatabaseError(#[from] DbErr),
@@ -46,6 +51,13 @@ pub enum ApiError {
 pub struct ApiErrorResp {
   pub status: u16,
   pub message: String,
+}
+
+// Let handlers map validator errors directly into ApiError
+impl From<ValidationErrors> for ApiError {
+  fn from(e: ValidationErrors) -> Self {
+    ApiError::Validation(e)
+  }
 }
 
 // The IntoResponse implementation for ApiError logs the error message.
@@ -69,6 +81,7 @@ impl IntoResponse for ApiError {
       ApiError::NotFound(_) => format!("{}", self),
       ApiError::Forbidden(_) => format!("{}", self),
       ApiError::Unauthorized(_) => format!("{}", self),
+      ApiError::Validation(ref err) => format!("{}", err),
       ApiError::DatabaseError(ref err) => format!("{}", err),
       ApiError::InternalError(ref err) => format!("{}", err),
     };
@@ -77,6 +90,7 @@ impl IntoResponse for ApiError {
     // Determine the appropriate status code.
     let status = match self {
       ApiError::InvalidJsonBody(_) | ApiError::InvalidRequest(_) => StatusCode::BAD_REQUEST,
+      ApiError::Validation(_) => StatusCode::UNPROCESSABLE_ENTITY,
       ApiError::NotFound(_) => StatusCode::NOT_FOUND,
       ApiError::Forbidden(_) => StatusCode::FORBIDDEN,
       ApiError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
