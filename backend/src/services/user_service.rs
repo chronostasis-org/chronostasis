@@ -5,7 +5,9 @@ use crate::entities::users::{
 };
 use bcrypt::{hash, DEFAULT_COST};
 use chrono::Utc;
-use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
+use sea_orm::{
+  ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, Set, SqlErr,
+};
 use uuid::Uuid;
 
 impl From<UserModel> for UserGetDto {
@@ -29,6 +31,32 @@ fn hash_with_pepper(password: &str) -> Result<String, ApiError> {
   let new_pwd = format!("{}{}", password, pepper);
   hash(new_pwd.as_bytes(), DEFAULT_COST)
     .map_err(|e| ApiError::InternalError(anyhow::anyhow!("Failed to hash password: {}", e)))
+}
+
+// Map SQL errors to ApiError.
+// Uses DbErr::sql_err() to detect unique constraint violations and foreign key violations
+fn map_db_err(e: DbErr) -> ApiError {
+  if let Some(sql) = e.sql_err() {
+    match sql {
+      SqlErr::UniqueConstraintViolation(constraint_name) => {
+        // Try to tailor the message if the constraint name reveals the column.
+        // Postgres default names often look like "users_email_key" / "users_slug_key".
+        let msg = if constraint_name.contains("email") {
+          "Email is already in use"
+        } else if constraint_name.contains("slug") {
+          "Username is already taken"
+        } else {
+          "Resource already exists"
+        };
+        return ApiError::Conflict(msg.to_string());
+      }
+      SqlErr::ForeignKeyConstraintViolation(_) => {
+        return ApiError::InvalidRequest("Invalid reference".to_string());
+      }
+      _ => {}
+    }
+  }
+  ApiError::DatabaseError(e)
 }
 
 pub async fn get_user_by_id(conn: &DatabaseConnection, id: Uuid) -> Result<UserGetDto, ApiError> {
@@ -77,7 +105,7 @@ pub async fn create_user(
     .await?
     .is_some()
   {
-    return Err(ApiError::InvalidRequest("Username is already taken".into()));
+    return Err(ApiError::Conflict("Username is already taken".into()));
   }
   if UserEntity::find()
     .filter(UserColumn::Email.eq(email.clone()))
@@ -85,7 +113,7 @@ pub async fn create_user(
     .await?
     .is_some()
   {
-    return Err(ApiError::InvalidRequest("Email is already in use".into()));
+    return Err(ApiError::Conflict("Email is already in use".into()));
   }
 
   // Hash password
@@ -101,10 +129,7 @@ pub async fn create_user(
     ..Default::default()
   };
 
-  let inserted = active
-    .insert(conn)
-    .await
-    .map_err(|e| ApiError::InternalError(anyhow::anyhow!(e)))?;
+  let inserted = active.insert(conn).await.map_err(map_db_err)?;
 
   Ok(inserted.into())
 }
@@ -139,7 +164,7 @@ pub async fn update_user(
       .await?
       .is_some();
     if slug_taken {
-      return Err(ApiError::InvalidRequest("Username is already taken".into()));
+      return Err(ApiError::Conflict("Username is already taken".into()));
     }
 
     active.username = Set(username);
@@ -156,7 +181,7 @@ pub async fn update_user(
       .await?
       .is_some();
     if email_taken {
-      return Err(ApiError::InvalidRequest("Email is already in use".into()));
+      return Err(ApiError::Conflict("Email is already in use".into()));
     }
 
     active.email = Set(email);
@@ -171,10 +196,7 @@ pub async fn update_user(
   // update updated_at
   active.updated_at = Set(Utc::now().into());
 
-  let updated = active
-    .update(conn)
-    .await
-    .map_err(|e| ApiError::InternalError(anyhow::anyhow!(e)))?;
+  let updated = active.update(conn).await.map_err(map_db_err)?;
 
   Ok(updated.into())
 }
@@ -195,9 +217,6 @@ pub async fn delete_user_soft(conn: &DatabaseConnection, id: Uuid) -> Result<(),
   let mut active: UserActiveModel = user.into();
   active.deleted_at = Set(Some(now));
   active.updated_at = Set(now);
-  active
-    .update(conn)
-    .await
-    .map_err(|e| ApiError::InternalError(anyhow::anyhow!(e)))?;
+  active.update(conn).await.map_err(map_db_err)?;
   Ok(())
 }

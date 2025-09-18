@@ -18,9 +18,13 @@ pub enum ApiError {
   #[error("Invalid payload.")]
   InvalidJsonBody(#[from] JsonRejection),
 
-  /// For errors that occur during manual validation.
+  /// For errors that occur during manual validation (malformed/invalid inputs).
   #[error("Invalid request: {0}")]
   InvalidRequest(String),
+
+  /// Conflicts with existing server state (e.g., unique violation, version conflict).
+  #[error("Conflict: {0}")]
+  Conflict(String),
 
   /// For errors that occur during manual validation.
   #[error("Not Found: {0}")]
@@ -78,6 +82,7 @@ impl IntoResponse for ApiError {
         _ => "Unknown error".to_string(),
       },
       ApiError::InvalidRequest(_) => format!("{}", self),
+      ApiError::Conflict(_) => format!("{}", self),
       ApiError::NotFound(_) => format!("{}", self),
       ApiError::Forbidden(_) => format!("{}", self),
       ApiError::Unauthorized(_) => format!("{}", self),
@@ -90,6 +95,7 @@ impl IntoResponse for ApiError {
     // Determine the appropriate status code.
     let status = match self {
       ApiError::InvalidJsonBody(_) | ApiError::InvalidRequest(_) => StatusCode::BAD_REQUEST,
+      ApiError::Conflict(_) => StatusCode::CONFLICT,
       ApiError::Validation(_) => StatusCode::UNPROCESSABLE_ENTITY,
       ApiError::NotFound(_) => StatusCode::NOT_FOUND,
       ApiError::Forbidden(_) => StatusCode::FORBIDDEN,
