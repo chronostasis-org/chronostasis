@@ -1,20 +1,16 @@
-use crate::models::UserStatus;
 use sea_orm::entity::prelude::*;
-use crate::models::UserRole;
+use crate::models::item_rarity::ItemRarity;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
-#[sea_orm(table_name = "users")]
+#[sea_orm(table_name = "items")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: Uuid,
-    pub slug: String,
-    pub email: String,
-    pub password: String,
+    pub id: i32,
     pub name: String,
-    pub status: UserStatus,
-    pub role: UserRole,
-    pub created_at: DateTimeWithTimeZone,
-    pub updated_at: DateTimeWithTimeZone,
+    pub rarity: ItemRarity,
+    pub x_coordinate: i32,
+    pub y_coordinate: i32,
+    pub total: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
